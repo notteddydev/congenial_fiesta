@@ -79,8 +79,12 @@ WSGI_APPLICATION = 'congenial_fiesta.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'congenial_fiesta_local',
+        'USER': os.environ.get('MYSQL_USER'),
+        'PASSWORD': os.environ.get('MYSQL_PASSWORD'),
+        'HOST': '127.0.0.1',
+        'PORT': '3306'
     }
 }
 
