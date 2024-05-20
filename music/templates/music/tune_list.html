@@ -11,7 +11,8 @@
     <ul>
         {% for tune in object_list %}
             <li>
-                {% if tune.file_exists %}
+                {% if tune.downloaded %}
+                Downloaded
                 {% else %}
                 <form action="{% url "tune-listen" tune.id %}" method="POST" style="display: inline;">
                     {% csrf_token %}

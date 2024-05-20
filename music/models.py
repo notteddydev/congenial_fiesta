@@ -1,8 +1,9 @@
+import os
+
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
-from django.conf import settings
 
 
 class Tag(models.Model):
@@ -39,7 +40,6 @@ def update_tune_file_names(sender: Artist, instance: Artist, **kwargs):
 
 class Tune(models.Model):
     name = models.CharField(max_length=150)
-    file_exists = models.BooleanField(default=False)
     file_name = models.CharField(blank=True, editable=False, max_length=200, unique=True)
     artists = models.ManyToManyField(Artist)
     tags = models.ManyToManyField(Tag)
@@ -51,7 +51,18 @@ class Tune(models.Model):
     
     @property
     def full_file_path(self):
-        return f"{settings.TUNES_DIR}/{self.file_name}"
+        return f"{os.environ.get('TUNES_DIR')}/{self.file_name}"
+    
+    @property
+    def downloaded(self):
+        if not os.path.isdir(os.environ.get('TUNES_DIR')):
+            return False
+        
+        if not self.file_name in os.listdir(os.environ.get('TUNES_DIR')):
+            return False
+        
+        return True
+
 
     def __str__(self):
         strTune = ''
