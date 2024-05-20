@@ -42,6 +42,10 @@ class Tune(models.Model):
     artists = models.ManyToManyField(Artist)
     tags = models.ManyToManyField(Tag)
     youtube_id = models.CharField(blank=True, max_length=75, unique=True)
+    
+    @property
+    def youtube_link(self):
+        return f"https://www.youtube.com/watch?v={self.youtube_id}"
 
     def __str__(self):
         strTune = ''
