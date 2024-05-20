@@ -12,7 +12,6 @@
         {% for tune in object_list %}
             <li>
                 {% if tune.file_exists %}
-                <a href="{% url "tune-play" tune.id %}">Play</a>
                 {% else %}
                 <form action="{% url "tune-listen" tune.id %}" method="POST" style="display: inline;">
                     {% csrf_token %}

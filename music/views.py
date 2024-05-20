@@ -1,5 +1,3 @@
-import pygame
-
 from django.shortcuts import render
 from django.views.generic import ListView, View
 from django.conf import settings
@@ -36,18 +34,5 @@ class TuneListenView(View):
 
         tune.file_exists = True
         tune.save()
-
-        return HttpResponseRedirect(reverse("tune-list"))
-
-
-class TunePlayView(View):
-    def get(self, request, id):
-        tune = Tune.objects.get(pk=id)
-
-        print(tune.full_file_path)
-
-        pygame.mixer.init()
-        pygame.mixer.music.load(tune.full_file_path)
-        pygame.mixer.music.play()
 
         return HttpResponseRedirect(reverse("tune-list"))
