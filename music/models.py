@@ -62,7 +62,7 @@ class Tune(models.Model):
         for artist in artists.all():
             file_name += f"{slugify(artist.name)}_and_"
 
-        return f"{file_name[:-5]}-_-{slugify(self.name)}"
+        return f"{file_name[:-5]}-_-{slugify(self.name)}.mp3"
     
     def save(self, *args, **kwargs):
         self.file_name = self.get_file_name()
