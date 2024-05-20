@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
+from django.conf import settings
 
 
 class Tag(models.Model):
@@ -10,7 +11,7 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
-    
+
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
         super().save(*args, **kwargs)
@@ -38,6 +39,7 @@ def update_tune_file_names(sender: Artist, instance: Artist, **kwargs):
 
 class Tune(models.Model):
     name = models.CharField(max_length=150)
+    file_exists = models.BooleanField(default=False)
     file_name = models.CharField(blank=True, editable=False, max_length=200, unique=True)
     artists = models.ManyToManyField(Artist)
     tags = models.ManyToManyField(Tag)
@@ -46,6 +48,10 @@ class Tune(models.Model):
     @property
     def youtube_link(self):
         return f"https://www.youtube.com/watch?v={self.youtube_id}"
+    
+    @property
+    def full_file_path(self):
+        return f"{settings.TUNES_DIR}/{self.file_name}"
 
     def __str__(self):
         strTune = ''
