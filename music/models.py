@@ -28,7 +28,7 @@ class Artist(models.Model):
     class Meta:
         ordering = ["name"]
 
-@receiver(post_save)
+@receiver(post_save, dispatch_uid="update_tune_file_names", sender=Artist)
 def update_tune_file_names(sender: Artist, instance: Artist, **kwargs):
     tunes = Tune.objects.filter(artists__id=instance.id)
 
