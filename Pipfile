@@ -8,6 +8,8 @@ python-dotenv = "*"
 django = "*"
 pymysql = "*"
 pytube = "*"
+pygame = "*"
+pydub = "*"
 
 [dev-packages]
 
