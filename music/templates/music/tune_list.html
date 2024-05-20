@@ -3,9 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Tune List View</title>
 </head>
 <body>
-    blobbery
+    <h1>Tune List View</h1>
+
+    <ul>
+        {% for tune in object_list %}
+            <li>
+                {% if tune.file_exists %}
+                <a href="{% url "tune-play" tune.id %}">Play</a>
+                {% else %}
+                <form action="{% url "tune-listen" tune.id %}" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit">Download</button>
+                </form>
+                {% endif %}
+                <span> - {{ tune }}</span>
+            </li>
+        {% endfor %}
+    </ul>
 </body>
 </html>
