@@ -99,6 +99,8 @@ class Tune(models.Model):
         song = AudioSegment.from_file(mp3)
         song.export(self.full_file_path, format="mp3")
 
+        return True
+
     class Meta:
         ordering = ["name"]
 
@@ -107,4 +109,4 @@ class Tune(models.Model):
 #     if not created:
 #         return
 
-#     push job to queue
+#     if created or name changed, push job to queue
