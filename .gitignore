@@ -139,3 +139,5 @@ GitHub.sublime-settings
 
 /tunes_dir/*
 !/tunes_dir/.gitkeep
+
+dump.rdb
