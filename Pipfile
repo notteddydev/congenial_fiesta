@@ -14,6 +14,7 @@ celery = "*"
 redis = "*"
 django-environ = "*"
 django-model-utils = "*"
+eyed3 = "*"
 
 [dev-packages]
 
