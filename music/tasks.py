@@ -42,8 +42,8 @@ def tune_update_file_names_for_artist(artist_id):
         current_path = f"{os.environ.get('TUNES_DIR')}/{tune_file_name}"
 
         file_name_split = tune_file_name.split('-_-')
-        youtube_id = file_name_split[2][:-4]
-        tune = tunes.filter(youtube_id=youtube_id).first()
+        tune_id = int(file_name_split[2][:-4])
+        tune = tunes.get(pk=tune_id)
 
         new_path = f"{os.environ.get('TUNES_DIR')}/{tune.file_name}"
 
