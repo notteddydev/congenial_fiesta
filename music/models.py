@@ -39,8 +39,9 @@ class Artist(models.Model):
         ordering = ["name"]
 
 @receiver(post_save, dispatch_uid="update_tune_file_names", sender=Artist)
-def update_tune_file_names(sender: Artist, instance: Artist, **kwargs):
-    transaction.on_commit(lambda: tune_update_file_names_for_artist.delay(instance.id))
+def update_tune_file_names(sender: Artist, instance: Artist, created: bool, **kwargs):
+    if not created:
+        transaction.on_commit(lambda: tune_update_file_names_for_artist.delay(instance.id))
 
 
 class Tune(models.Model):
@@ -104,7 +105,11 @@ class Tune(models.Model):
         except VideoUnavailable:
             return False
 
-        video = yt.streams.filter(progressive=True).first()
+        try:
+            video = yt.streams.filter(progressive=True).first()
+        except AttributeError:
+            return False
+        
         mp3 = video.download(filename=self.file_name, output_path=os.environ.get('TUNES_DIR'))
 
         if mp3 is None:
