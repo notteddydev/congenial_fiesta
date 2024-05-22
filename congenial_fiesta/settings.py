@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'music.middleware.check_tunes_dir_exists_middleware.CheckTunesDirExistsMiddleware'
 ]
 
 ROOT_URLCONF = 'congenial_fiesta.urls'
