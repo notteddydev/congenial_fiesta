@@ -5,7 +5,7 @@ from celery import shared_task
 from django.db import IntegrityError, transaction
 from django.db.models import F
 
-from .utils import get_tune_id_from_file_name
+from .utils import get_existing_tune_file_name_by_tune_id
 
 
 @shared_task
@@ -27,14 +27,7 @@ def tune_update_file_name(tune_id):
     from .models import Tune
 
     tune = Tune.objects.get(pk=tune_id)
-
-    tune_file_names = os.listdir(os.environ.get('TUNES_DIR'))
-
-    tune_gen = (
-        tune_file_name for tune_file_name in tune_file_names
-        if tune_id == get_tune_id_from_file_name(tune_file_name)
-    )
-    existing_file_name = next(tune_gen, None)
+    existing_file_name = get_existing_tune_file_name_by_tune_id(tune_id)
 
     if existing_file_name is None:
         tune.file_name = f"{tune.youtube_id}.mp3"
@@ -42,9 +35,9 @@ def tune_update_file_name(tune_id):
         return
      
     tune.set_file_name().save()
-    current_file_path = f"{os.environ.get('TUNES_DIR')}/{existing_file_name}"
-    new_file_path = f"{os.environ.get('TUNES_DIR')}/{tune.file_name}"
-    move(current_file_path, new_file_path)
+    current_path = f"{os.environ.get('TUNES_DIR')}/{existing_file_name}"
+
+    move(current_path, tune.full_file_path)
 
 
 @shared_task
@@ -64,14 +57,14 @@ def tune_update_file_names_for_artist(artist_id):
                 tune.set_file_name().save()
     except IntegrityError:
         raise IntegrityError(f"Tunes couldn't be updated for artist with id: {artist_id}")
+    
+    # Could this be done in the transaction.atomic() block?
+    for tune in tunes:
+        existing_file_name = get_existing_tune_file_name_by_tune_id(tune.id)
 
-    tune_file_names = os.listdir(os.environ.get('TUNES_DIR'))
+        if existing_file_name is None:
+            print(f"No file found for tune with id: {tune.id}")
+            continue
 
-    for tune_file_name in tune_file_names:
-        current_path = f"{os.environ.get('TUNES_DIR')}/{tune_file_name}"
-        tune_id = get_tune_id_from_file_name(tune_file_name)
-        tune = tunes.get(pk=tune_id)
-
-        new_path = f"{os.environ.get('TUNES_DIR')}/{tune.file_name}"
-
-        move(current_path, new_path)
+        current_path = f"{os.environ.get('TUNES_DIR')}/{existing_file_name}"
+        move(current_path, tune.full_file_path)
