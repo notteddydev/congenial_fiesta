@@ -81,7 +81,7 @@ class Tune(models.Model):
         for artist in self.artists.all():
             strTune += f"{artist.name}, "
 
-        return f"{strTune[:-2]} - {self.name}"
+        return f"{self.name} - {strTune[:-2]}"
 
     def save(self, *args, **kwargs):
         if self.file_name == "":
