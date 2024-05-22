@@ -89,6 +89,12 @@ class Tune(models.Model):
 
         super().save(*args, **kwargs)
 
+    def delete(self, *args, **kwargs):
+        if os.path.isfile(self.full_file_path):
+            os.remove(self.full_file_path)
+
+        super().delete(*args, **kwargs)
+
     def set_file_name(self):
         file_name = ''
         artists = Artist.objects.filter(tune=self.id)
