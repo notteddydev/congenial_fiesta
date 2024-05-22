@@ -90,9 +90,7 @@ class Tune(models.Model):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        if os.path.isfile(self.full_file_path):
-            os.remove(self.full_file_path)
-
+        self.remove_file()
         super().delete(*args, **kwargs)
 
     def set_file_name(self):
@@ -105,6 +103,10 @@ class Tune(models.Model):
         self.file_name = f"{file_name[:-5]}-_-{slugify(self.name)}-_-{self.id}.mp3"
 
         return self
+    
+    def remove_file(self):
+        if os.path.isfile(self.full_file_path):
+            os.remove(self.full_file_path)
 
     def download(self):
         try:
