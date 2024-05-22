@@ -1,4 +1,5 @@
 import os
+import eyed3
 
 from django.db import models
 from django.db.models.signals import post_save
@@ -110,7 +111,7 @@ class Tune(models.Model):
         except AttributeError:
             return False
         
-        mp3 = video.download(filename=self.file_name, output_path=os.environ.get('TUNES_DIR'))
+        mp3 = video.download(filename=self.file_name, output_path=os.environ.get("TUNES_DIR"))
 
         if mp3 is None:
             return False
@@ -119,6 +120,13 @@ class Tune(models.Model):
         song.export(self.full_file_path, format="mp3")
 
         return True
+    
+    def set_meta_data(self):
+        audiofile = eyed3.load(self.full_file_path)
+        audiofile.tag.artist = ", ".join(list(Artist.objects.filter(tune=self.id).values("name")))
+        audiofile.tag.title = self.name
+        audiofile.tag.save()
+        
 
     class Meta:
         ordering = ["name"]
