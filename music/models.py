@@ -10,7 +10,7 @@ from pydub import AudioSegment
 from pytube import YouTube
 from pytube.exceptions import VideoUnavailable
 
-from .tasks import tune_update_file_names_for_artist
+from .tasks import tune_download, tune_update_file_names_for_artist
 
 
 class Tag(models.Model):
@@ -91,7 +91,7 @@ class Tune(models.Model):
         for artist in artists.all():
             file_name += f"{slugify(artist.name)}_and_"
 
-        self.file_name = f"{file_name[:-5]}-_-{slugify(self.name)}.mp3"
+        self.file_name = f"{file_name[:-5]}-_-{slugify(self.name)}-_-{self.id}.mp3"
 
         return self
 
@@ -114,3 +114,8 @@ class Tune(models.Model):
 
     class Meta:
         ordering = ["name"]
+
+@receiver(post_save, dispatch_uid="download_tune", sender=Tune)
+def download_tune(sender: Tune, instance: Tune, created: bool, **kwargs):
+    if created:
+        transaction.on_commit(lambda: tune_download.delay(instance.id))
