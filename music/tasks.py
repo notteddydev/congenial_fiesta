@@ -18,7 +18,7 @@ def tune_download(tune_id):
     tune.set_file_name()
     if tune.download():
         tune.save()
-        tune.set_meta_data()
+        tune.set_metadata()
 
 
 @shared_task
