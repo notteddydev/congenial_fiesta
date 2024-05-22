@@ -2,12 +2,15 @@ import os
 
 from django.db import models
 from django.db.models.signals import post_save
+from django.db import transaction
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 
 from pydub import AudioSegment
 from pytube import YouTube
 from pytube.exceptions import VideoUnavailable
+
+from .tasks import tune_update_file_names_for_artist
 
 
 class Tag(models.Model):
@@ -34,14 +37,14 @@ class Artist(models.Model):
     class Meta:
         ordering = ["name"]
 
-# @receiver(post_save, dispatch_uid="update_tune_file_names", sender=Artist)
-# def update_tune_file_names(sender: Artist, instance: Artist, **kwargs):
-#     push job to queue
+@receiver(post_save, dispatch_uid="update_tune_file_names", sender=Artist)
+def update_tune_file_names(sender: Artist, instance: Artist, **kwargs):
+    transaction.on_commit(lambda: tune_update_file_names_for_artist.delay(instance.id))
 
 
 class Tune(models.Model):
     name = models.CharField(max_length=150)
-    file_name = models.CharField(blank=True, editable=False, max_length=200, unique=True)
+    file_name = models.CharField(blank=False, editable=False, max_length=200, unique=True)
     artists = models.ManyToManyField(Artist)
     tags = models.ManyToManyField(Tag)
     youtube_id = models.CharField(blank=False, max_length=75, unique=True)
@@ -75,14 +78,22 @@ class Tune(models.Model):
 
         return f"{strTune[:-2]} - {self.name}"
 
-    def get_file_name(self):
+    def save(self, *args, **kwargs):
+        if self.file_name == "":
+            self.file_name = f"{self.youtube_id}.mp3"
+
+        super().save(*args, **kwargs)
+
+    def set_file_name(self):
         file_name = ''
         artists = Artist.objects.filter(tune=self.id)
 
         for artist in artists.all():
             file_name += f"{slugify(artist.name)}_and_"
 
-        return f"{file_name[:-5]}-_-{slugify(self.name)}.mp3"
+        self.file_name = f"{file_name[:-5]}-_-{slugify(self.name)}.mp3"
+
+        return self
 
     def download(self):
         try:
@@ -103,10 +114,3 @@ class Tune(models.Model):
 
     class Meta:
         ordering = ["name"]
-
-# @receiver(post_save, dispatch_uid="download_mp3", sender=Tune)
-# def download_mp3(sender: Tune, instance: Tune, created: bool, **kwargs):
-#     if not created:
-#         return
-
-#     if created or name changed, push job to queue
