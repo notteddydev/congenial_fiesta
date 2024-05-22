@@ -137,7 +137,4 @@ GitHub.sublime-settings
 !.vscode/extensions.json 
 .history
 
-/tunes_dir/*
-!/tunes_dir/.gitkeep
-
 dump.rdb
