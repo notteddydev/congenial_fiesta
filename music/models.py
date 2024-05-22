@@ -131,7 +131,7 @@ class Tune(models.Model):
     
     def set_metadata(self):
         audiofile = eyed3.load(self.full_file_path)
-        audiofile.tag.artist = ", ".join(list(Artist.objects.filter(tune=self.id).values("name")))
+        audiofile.tag.artist = ", ".join([artist.name for artist in self.artists.all()])
         audiofile.tag.title = self.name
         audiofile.tag.save()
         
