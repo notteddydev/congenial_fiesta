@@ -9,8 +9,9 @@ from django.template.defaultfilters import slugify
 from pydub import AudioSegment
 from pytube import YouTube
 from pytube.exceptions import VideoUnavailable
+from model_utils import FieldTracker
 
-from .tasks import tune_download, tune_update_file_names_for_artist
+from .tasks import tune_download, tune_update_file_name, tune_update_file_names_for_artist
 
 
 class Tag(models.Model):
@@ -48,6 +49,8 @@ class Tune(models.Model):
     artists = models.ManyToManyField(Artist)
     tags = models.ManyToManyField(Tag)
     youtube_id = models.CharField(blank=False, max_length=75, unique=True)
+
+    tracker = FieldTracker()
 
     @property
     def youtube_link(self):
@@ -119,3 +122,5 @@ class Tune(models.Model):
 def download_tune(sender: Tune, instance: Tune, created: bool, **kwargs):
     if created:
         transaction.on_commit(lambda: tune_download.delay(instance.id))
+    elif instance.tracker.has_changed('name'):
+        transaction.on_commit(lambda: tune_update_file_name.delay(instance.id))
