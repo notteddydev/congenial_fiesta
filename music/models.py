@@ -64,16 +64,7 @@ class Tune(models.Model):
 
     @property
     def downloaded(self):
-        if len(self.file_name) == 0:
-            return False
-
-        if not os.path.isdir(os.environ.get('TUNES_DIR')):
-            return False
-
-        if not self.file_name in os.listdir(os.environ.get('TUNES_DIR')):
-            return False
-
-        return True
+        return os.path.isfile(self.full_file_path)
 
     def __str__(self):
         strTune = ''
