@@ -51,6 +51,7 @@ class Tune(models.Model):
     artists = models.ManyToManyField(Artist)
     tags = models.ManyToManyField(Tag)
     youtube_id = models.CharField(blank=False, max_length=75, unique=True)
+    attempt_download_on_create = models.BooleanField(default=False)
 
     tracker = FieldTracker()
 
@@ -128,6 +129,7 @@ class Tune(models.Model):
 @receiver(post_save, dispatch_uid="download_tune", sender=Tune)
 def download_tune(sender: Tune, instance: Tune, created: bool, **kwargs):
     if created:
-        transaction.on_commit(lambda: tune_download.delay(instance.id))
+        if instance.attempt_download_on_create:
+            transaction.on_commit(lambda: tune_download.delay(instance.id))
     elif instance.tracker.has_changed('name'):
         transaction.on_commit(lambda: tune_update_file_name.delay(instance.id))
