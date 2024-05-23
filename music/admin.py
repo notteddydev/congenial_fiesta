@@ -1,6 +1,11 @@
+import datetime
+import json
+
 from django.contrib import admin
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
+
+from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
 from .models import Artist, Tag, Tune
 from .tasks import tune_download
@@ -16,14 +21,22 @@ class TuneAdmin(admin.ModelAdmin):
     @admin.action(description="Download selected tunes")
     def download_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]):
         # Set a 20 min delay between each download.
-        delay = 1200
+        minute_delay = 20
         counter = 0
         for tune in queryset:
             if tune.downloaded:
                 continue
 
-            countdown = delay * counter
-            tune_download.apply_async(countdown=countdown)
+            now = datetime.datetime.now()
+            clocked_time = now + datetime.timedelta(minutes=minute_delay*counter)
+            schedule, _ = ClockedSchedule.objects.get_or_create(clocked_time=clocked_time)
+            PeriodicTask.objects.create(
+                clocked=schedule,
+                name=f"Downloading tune with id: {tune.id}",
+                one_off=True,
+                task="music.tasks.tune_download",
+                args=json.dumps([tune.id])
+            )
             counter += 1
 
     def delete_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]) -> None:
