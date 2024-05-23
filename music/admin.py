@@ -51,7 +51,11 @@ class TuneAdmin(admin.ModelAdmin):
                 task=task
             ))
             counter += 1
-            
+
+    @admin.action(description="Trim selected tunes")
+    def trim_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]):
+        for tune in queryset:
+            tune.trim()
 
     def delete_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]) -> None:
         for tune in queryset:
@@ -68,7 +72,7 @@ class TuneAdmin(admin.ModelAdmin):
 
         return "-"
 
-    actions = [download_queryset, set_queryset_metadata]
+    actions = [download_queryset, set_queryset_metadata, trim_queryset]
     list_display = ("name", "view_artists", "view_downloaded",)
 
 
