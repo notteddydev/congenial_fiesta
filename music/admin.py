@@ -1,5 +1,7 @@
-import datetime
 import json
+import random
+
+from datetime import datetime, timedelta
 
 from django.contrib import admin
 from django.db import transaction
@@ -21,29 +23,33 @@ class TuneAdmin(admin.ModelAdmin):
 
     @admin.action(description="Download selected tunes")
     def download_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]):
-        # Set a 20 min delay between each download.
-        minute_delay = 20
+        # Set an average 20 min delay between each download.
+        interval_seconds = 1200
         counter = 0
+        now = datetime.now()
+        task = "music.tasks.tune_download"
+
+        existing_periodic_download_tasks = PeriodicTask.objects.filter(task=task)
+
+        if existing_periodic_download_tasks.exists():
+            existing_periodic_download_tasks.delete()
+
         for tune in queryset:
             if tune.downloaded:
                 continue
 
-            now = datetime.datetime.now()
-            clocked_time = now + datetime.timedelta(minutes=minute_delay*counter)
+            periodic_task_name = f"Downloading tune with id: {tune.id}"
+            second_delay = (interval_seconds * counter) + random.randint(780, 1620)
+            clocked_time = now + timedelta(seconds=second_delay)
             schedule, _ = ClockedSchedule.objects.get_or_create(clocked_time=clocked_time)
-
-            counter += 1
-
-            task_name = f"Downloading tune with id: {tune.id}"
-
-            PeriodicTask.objects.get(name=task_name).delete()
             transaction.on_commit(lambda: PeriodicTask.objects.create(
+                args=json.dumps([tune.id]),
                 clocked=schedule,
-                name=f"Downloading tune with id: {tune.id}",
+                name=periodic_task_name,
                 one_off=True,
-                task="music.tasks.tune_download",
-                args=json.dumps([tune.id])
+                task=task
             ))
+            counter += 1
             
 
     def delete_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]) -> None:
