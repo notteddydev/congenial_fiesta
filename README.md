@@ -14,3 +14,8 @@ redis-server
 ```bash
 python -m celery -A congenial_fiesta worker
 ```
+
+### Terminal 4:
+```bash
+celery -A congenial_fiesta beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+```
