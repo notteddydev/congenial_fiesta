@@ -2,6 +2,7 @@ import datetime
 import json
 
 from django.contrib import admin
+from django.db import transaction
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
 
@@ -30,14 +31,20 @@ class TuneAdmin(admin.ModelAdmin):
             now = datetime.datetime.now()
             clocked_time = now + datetime.timedelta(minutes=minute_delay*counter)
             schedule, _ = ClockedSchedule.objects.get_or_create(clocked_time=clocked_time)
-            PeriodicTask.objects.create(
+
+            counter += 1
+
+            task_name = f"Downloading tune with id: {tune.id}"
+
+            PeriodicTask.objects.get(name=task_name).delete()
+            transaction.on_commit(lambda: PeriodicTask.objects.create(
                 clocked=schedule,
                 name=f"Downloading tune with id: {tune.id}",
                 one_off=True,
                 task="music.tasks.tune_download",
                 args=json.dumps([tune.id])
-            )
-            counter += 1
+            ))
+            
 
     def delete_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]) -> None:
         for tune in queryset:
