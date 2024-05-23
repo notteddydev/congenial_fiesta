@@ -10,9 +10,10 @@ from .models import Artist, Tag, Tune
 
 class TuneAdmin(admin.ModelAdmin):
     @admin.action(description="Set the title and artist metadata")
-    def set_metadata(self, request: HttpRequest, queryset: QuerySet[Any]):
+    def set_queryset_metadata(self, request: HttpRequest, queryset: QuerySet[Any]):
         for tune in queryset:
-            tune.set_metadata()
+            if tune.downloaded:
+                tune.set_metadata()
 
 
     def delete_queryset(self, request: HttpRequest, queryset: QuerySet[Any]) -> None:
@@ -24,7 +25,7 @@ class TuneAdmin(admin.ModelAdmin):
     def view_artists(self, obj):
         return ", ".join([artist.name for artist in obj.artists.all()])
     
-    actions = [set_metadata]
+    actions = [set_queryset_metadata]
     list_display = ("name", "view_artists",)
 
 
