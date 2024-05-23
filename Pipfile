@@ -15,6 +15,7 @@ redis = "*"
 django-environ = "*"
 django-model-utils = "*"
 eyed3 = "*"
+django-celery-beat = "*"
 
 [dev-packages]
 
