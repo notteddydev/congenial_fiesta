@@ -3,6 +3,7 @@ from django.db.models.query import QuerySet
 from django.http import HttpRequest
 
 from .models import Artist, Tag, Tune
+from .tasks import tune_download
 
 
 class TuneAdmin(admin.ModelAdmin):
@@ -12,15 +13,18 @@ class TuneAdmin(admin.ModelAdmin):
             if tune.downloaded:
                 tune.set_metadata()
 
-
     @admin.action(description="Download selected tunes")
     def download_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]):
+        # Set a 20 min delay between each download.
+        delay = 1200
+        counter = 0
         for tune in queryset:
-            if not tune.downloaded:
-                tune.set_file_name()
-                if tune.download():
-                    tune.save()
+            if tune.downloaded:
+                continue
 
+            countdown = delay * counter
+            tune_download.apply_async(countdown=countdown)
+            counter += 1
 
     def delete_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]) -> None:
         for tune in queryset:
@@ -30,13 +34,13 @@ class TuneAdmin(admin.ModelAdmin):
 
     def view_artists(self: admin.ModelAdmin, obj: Tune):
         return ", ".join([artist.name for artist in obj.artists.all()])
-    
+
     def view_downloaded(self: admin.ModelAdmin, obj: Tune):
         if obj.downloaded:
             return "Downloaded"
-        
+
         return "-"
-    
+
     actions = [download_queryset, set_queryset_metadata]
     list_display = ("name", "view_artists", "view_downloaded",)
 
