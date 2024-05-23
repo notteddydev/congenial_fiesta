@@ -19,6 +19,8 @@ def tune_download(tune_id):
     if tune.download():
         tune.save()
         tune.set_metadata()
+    else:
+        print(f"tune_download failed for tune with id: {tune_id}")
 
 
 @shared_task
