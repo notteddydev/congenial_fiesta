@@ -96,7 +96,7 @@ class Tune(models.Model):
         return self
     
     def remove_file(self):
-        if os.path.isfile(self.full_file_path):
+        if self.downloaded:
             os.remove(self.full_file_path)
 
     def download(self):
