@@ -6,14 +6,14 @@ from .models import Artist, Tag, Tune
 
 
 class TuneAdmin(admin.ModelAdmin):
-    @admin.action(description="Set the title and artist metadata")
+    @admin.action(description="Set metadata for selected tunes")
     def set_queryset_metadata(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]):
         for tune in queryset:
             if tune.downloaded:
                 tune.set_metadata()
 
 
-    @admin.action(description="Download")
+    @admin.action(description="Download selected tunes")
     def download_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]):
         for tune in queryset:
             if not tune.downloaded:
