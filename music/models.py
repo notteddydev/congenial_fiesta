@@ -51,6 +51,8 @@ class Tune(models.Model):
     artists = models.ManyToManyField(Artist)
     tags = models.ManyToManyField(Tag)
     youtube_id = models.CharField(blank=False, max_length=75, unique=True)
+    trim_start_seconds = models.IntegerField(blank=False, default=0, null=False)
+    trim_end_seconds = models.IntegerField(blank=False, default=0, null=False)
     attempt_download_on_create = models.BooleanField(default=False)
 
     tracker = FieldTracker()
@@ -94,6 +96,15 @@ class Tune(models.Model):
     def remove_file(self):
         if self.downloaded:
             os.remove(self.full_file_path)
+
+    def trim(self):
+        ms_end = self.trim_end_seconds * 1000
+        ms_start = self.trim_start_seconds * 1000
+
+        song = AudioSegment.from_file(self.full_file_path)
+        song = song[ms_start:-ms_end]
+        song.export(self.full_file_path, format="mp3")
+
 
     def download(self):
         try:
