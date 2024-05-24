@@ -11,6 +11,7 @@ from pydub import AudioSegment
 from pytube import YouTube
 from pytube.exceptions import VideoUnavailable
 from model_utils import FieldTracker
+from shutil import copy2
 
 from .tasks import tune_download, tune_update_file_name, tune_update_file_names_for_artist
 
@@ -81,6 +82,10 @@ class Tune(models.Model):
     @property
     def youtube_link(self):
         return f"https://www.youtube.com/watch?v={self.youtube_id}"
+    
+    @property
+    def full_file_path_original(self):
+        return f"{os.environ.get('ORIGINAL_TUNES_DIR')}/{self.file_name}"
 
     @property
     def full_file_path(self):
@@ -125,7 +130,7 @@ class Tune(models.Model):
         ms_end = self.trim_end_seconds * 1000
         ms_start = self.trim_start_seconds * 1000
 
-        song = AudioSegment.from_file(self.full_file_path)
+        song = AudioSegment.from_file(self.full_file_path_original)
 
         if ms_end > 0:
             song = song[:-ms_end]
@@ -147,13 +152,14 @@ class Tune(models.Model):
         except AttributeError:
             return False
         
-        mp3 = video.download(filename=self.file_name, output_path=os.environ.get("TUNES_DIR"))
+        mp3 = video.download(filename=self.file_name, output_path=os.environ.get("ORIGINAL_TUNES_DIR"))
 
         if mp3 is None:
             return False
 
         song = AudioSegment.from_file(mp3)
-        song.export(self.full_file_path, format="mp3")
+        song.export(self.full_file_path_original, format="mp3")
+        copy2(self.full_file_path_original, self.full_file_path)
 
         return True
     
