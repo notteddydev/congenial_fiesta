@@ -37,7 +37,7 @@ class TuneAdmin(admin.ModelAdmin):
                 continue
 
             periodic_task_name = f"Downloading tune with id: {tune.id}"
-            second_delay = (os.environ.get('DOWNLOAD_INTERVAL_SECONDS') * counter) + random.randint(os.environ.get('DOWNLOAD_DEVIATION_LOWER'), os.environ.get('DOWNLOAD_DEVIATION_HIGHER'))
+            second_delay = (int(os.environ.get('DOWNLOAD_INTERVAL_SECONDS')) * counter) + random.randint(int(os.environ.get('DOWNLOAD_DEVIATION_LOWER')), int(os.environ.get('DOWNLOAD_DEVIATION_HIGHER')))
             clocked_time = now + timedelta(seconds=second_delay)
             schedule, _ = ClockedSchedule.objects.get_or_create(clocked_time=clocked_time)
             transaction.on_commit(lambda: PeriodicTask.objects.create(
