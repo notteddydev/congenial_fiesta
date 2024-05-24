@@ -14,6 +14,14 @@ from model_utils import FieldTracker
 
 from .tasks import tune_download, tune_update_file_name, tune_update_file_names_for_artist
 
+class Genre(models.Model):
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ["name"]
 
 class Tag(models.Model):
     name = models.CharField(max_length=75, unique=True)
@@ -44,11 +52,24 @@ def update_tune_file_names(sender: Artist, instance: Artist, created: bool, **kw
     if not created:
         transaction.on_commit(lambda: tune_update_file_names_for_artist.delay(instance.id))
 
+class Album(models.Model):
+    name = models.CharField(max_length=100)
+    year = models.SmallIntegerField()
+    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ["name"]
 
 class Tune(models.Model):
     name = models.CharField(max_length=150)
     file_name = models.CharField(blank=False, editable=False, max_length=200, unique=True)
     artists = models.ManyToManyField(Artist)
+    album = models.ForeignKey(Album, on_delete=models.CASCADE)
+    track_number = models.SmallIntegerField(default=1, null=False)
+    genre = models.ForeignKey(Genre, on_delete=models.RESTRICT)
     tags = models.ManyToManyField(Tag)
     youtube_id = models.CharField(blank=False, max_length=75, unique=True)
     trim_start_seconds = models.IntegerField(blank=False, default=0, null=False)
@@ -131,11 +152,16 @@ class Tune(models.Model):
         audiofile = eyed3.load(self.full_file_path)
         audiofile.tag.artist = ", ".join([artist.name for artist in self.artists.all()])
         audiofile.tag.title = self.name
+        audiofile.tag.album = self.album.name
+        audiofile.tag.album_artist = self.album.artist.name if self.album.artist != None else "Various Artists"
+        audiofile.tag.genre = self.genre.name
+        audiofile.tag.track_num = self.track_number
         audiofile.tag.save()
         
 
     class Meta:
         ordering = ["name"]
+        unique_together = ('album', 'track_number',)
 
 @receiver(post_save, dispatch_uid="download_tune", sender=Tune)
 def download_tune(sender: Tune, instance: Tune, created: bool, **kwargs):
