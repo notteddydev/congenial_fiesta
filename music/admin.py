@@ -1,4 +1,5 @@
 import json
+import os
 import random
 
 from datetime import datetime, timedelta
@@ -11,7 +12,6 @@ from django.http import HttpRequest
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
 from .models import Album, Artist, Genre, Tag, Tune
-from .tasks import tune_download
 
 
 class TuneAdmin(admin.ModelAdmin):
@@ -23,9 +23,6 @@ class TuneAdmin(admin.ModelAdmin):
 
     @admin.action(description="Download selected tunes")
     def download_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]):
-        # Set an average 20 min delay between each download.
-        interval_seconds = 1200
-        leeway_seconds = 420
         counter = 0
         now = datetime.now()
         task = "music.tasks.tune_download"
@@ -40,7 +37,7 @@ class TuneAdmin(admin.ModelAdmin):
                 continue
 
             periodic_task_name = f"Downloading tune with id: {tune.id}"
-            second_delay = (interval_seconds * counter) + random.randint(interval_seconds - leeway_seconds, interval_seconds + leeway_seconds)
+            second_delay = (os.environ.get('DOWNLOAD_INTERVAL_SECONDS') * counter) + random.randint(os.environ.get('DOWNLOAD_DEVIATION_LOWER'), os.environ.get('DOWNLOAD_DEVIATION_HIGHER'))
             clocked_time = now + timedelta(seconds=second_delay)
             schedule, _ = ClockedSchedule.objects.get_or_create(clocked_time=clocked_time)
             transaction.on_commit(lambda: PeriodicTask.objects.create(
