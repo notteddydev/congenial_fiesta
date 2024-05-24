@@ -55,7 +55,8 @@ class TuneAdmin(admin.ModelAdmin):
     @admin.action(description="Trim selected tunes")
     def trim_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]):
         for tune in queryset:
-            tune.trim()
+            if tune.downloaded:
+                tune.trim()
 
     def delete_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]) -> None:
         for tune in queryset:
