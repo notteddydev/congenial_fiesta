@@ -119,11 +119,20 @@ class Tune(models.Model):
             os.remove(self.full_file_path)
 
     def trim(self):
+        if self.trim_end_seconds + self.trim_start_seconds == 0:
+            return
+
         ms_end = self.trim_end_seconds * 1000
         ms_start = self.trim_start_seconds * 1000
 
         song = AudioSegment.from_file(self.full_file_path)
-        song = song[ms_start:-ms_end]
+
+        if ms_end > 0:
+            song = song[:-ms_end]
+
+        if ms_start > 0:
+            song = song[ms_start:]
+
         song.export(self.full_file_path, format="mp3")
 
 
@@ -153,6 +162,7 @@ class Tune(models.Model):
         audiofile.tag.album = self.album.name
         audiofile.tag.album_artist = self.album.artist.name if self.album.artist != None else "Various Artists"
         audiofile.tag.artist = ", ".join([artist.name for artist in self.artists.all()])
+        audiofile.tag.comments.set(f"id={self.id}")
         audiofile.tag.genre = self.genre.name
         audiofile.tag.recording_date = self.album.year
         audiofile.tag.title = self.name
