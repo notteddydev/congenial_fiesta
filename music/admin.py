@@ -10,7 +10,7 @@ from django.http import HttpRequest
 
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
-from .models import Artist, Tag, Tune
+from .models import Album, Artist, Genre, Tag, Tune
 from .tasks import tune_download
 
 
@@ -76,6 +76,8 @@ class TuneAdmin(admin.ModelAdmin):
     list_display = ("name", "view_artists", "view_downloaded",)
 
 
+admin.site.register(Album)
 admin.site.register(Artist)
+admin.site.register(Genre)
 admin.site.register(Tag)
 admin.site.register(Tune, TuneAdmin)
