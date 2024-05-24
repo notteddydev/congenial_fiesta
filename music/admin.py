@@ -71,7 +71,8 @@ class TuneAdmin(admin.ModelAdmin):
         return "-"
 
     actions = [download_queryset, set_queryset_metadata, trim_queryset]
-    list_display = ("name", "view_artists", "view_downloaded",)
+    list_display = ("name", "view_artists", "album", "view_downloaded",)
+    list_filter = ("tags", "album__year", "artists", "album", "genre",)
 
 
 admin.site.register(Album)
