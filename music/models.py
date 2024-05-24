@@ -67,9 +67,9 @@ class Tune(models.Model):
     name = models.CharField(max_length=150)
     file_name = models.CharField(blank=False, editable=False, max_length=200, unique=True)
     artists = models.ManyToManyField(Artist)
-    album = models.ForeignKey(Album, on_delete=models.CASCADE)
+    album = models.ForeignKey(Album, on_delete=models.CASCADE, null=True)
     track_number = models.SmallIntegerField(default=1, null=False)
-    genre = models.ForeignKey(Genre, on_delete=models.RESTRICT)
+    genre = models.ForeignKey(Genre, on_delete=models.RESTRICT, null=True)
     tags = models.ManyToManyField(Tag)
     youtube_id = models.CharField(blank=False, max_length=75, unique=True)
     trim_start_seconds = models.IntegerField(blank=False, default=0, null=False)
@@ -150,14 +150,14 @@ class Tune(models.Model):
     
     def set_metadata(self):
         audiofile = eyed3.load(self.full_file_path)
-        audiofile.tag.artist = ", ".join([artist.name for artist in self.artists.all()])
-        audiofile.tag.title = self.name
         audiofile.tag.album = self.album.name
         audiofile.tag.album_artist = self.album.artist.name if self.album.artist != None else "Various Artists"
+        audiofile.tag.artist = ", ".join([artist.name for artist in self.artists.all()])
         audiofile.tag.genre = self.genre.name
+        audiofile.tag.recording_date = self.album.year
+        audiofile.tag.title = self.name
         audiofile.tag.track_num = self.track_number
         audiofile.tag.save()
-        
 
     class Meta:
         ordering = ["name"]
