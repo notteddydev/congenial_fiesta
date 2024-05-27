@@ -82,6 +82,10 @@ class Tune(models.Model):
     @property
     def downloaded(self):
         return os.path.isfile(self.full_file_path)
+    
+    @property
+    def trimmable(self):
+        return self.trim_end_seconds + self.trim_start_seconds > 0
 
     def __str__(self):
         return f"{self.name} - {self.id}"
@@ -112,7 +116,7 @@ class Tune(models.Model):
             os.remove(self.full_file_path)
 
     def trim(self):
-        if self.trim_end_seconds + self.trim_start_seconds == 0:
+        if not self.trimmable:
             return
 
         ms_end = self.trim_end_seconds * 1000
@@ -147,7 +151,10 @@ class Tune(models.Model):
 
         song = AudioSegment.from_file(mp3)
         song.export(self.full_file_path_original, format="mp3")
-        copy2(self.full_file_path_original, self.full_file_path)
+        if self.trimmable:
+            self.trim()
+        else:
+            copy2(self.full_file_path_original, self.full_file_path)
 
         return True
     
