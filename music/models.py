@@ -15,54 +15,42 @@ from shutil import copy2
 
 from .tasks import tune_download, tune_update_file_name, tune_update_file_names_for_artist
 
-class Genre(models.Model):
-    name = models.CharField(max_length=50)
+class TuneOrganiser(models.Model):
+    @property
+    def dir_path(self):
+        return f"{os.environ.get('BASE_STORAGE_DIR')}{self.name}"
 
     def __str__(self):
         return self.name
 
     class Meta:
+        abstract = True
         ordering = ["name"]
 
-class Tag(models.Model):
+class Genre(TuneOrganiser):
+    name = models.CharField(max_length=50)
+
+class Tag(TuneOrganiser):
     name = models.CharField(max_length=75, unique=True)
     slug = models.SlugField(db_index=True, editable=False, unique=True)
-
-    def __str__(self):
-        return self.name
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
-    class Meta:
-        ordering = ["name"]
 
-
-class Artist(models.Model):
+class Artist(TuneOrganiser):
     name = models.CharField(max_length=150, unique=True)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ["name"]
 
 @receiver(post_save, dispatch_uid="update_tune_file_names", sender=Artist)
 def update_tune_file_names(sender: Artist, instance: Artist, created: bool, **kwargs):
     if not created:
         transaction.on_commit(lambda: tune_update_file_names_for_artist.delay(instance.id))
 
-class Album(models.Model):
+class Album(TuneOrganiser):
     name = models.CharField(max_length=100)
     year = models.SmallIntegerField()
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ["name"]
 
 class Tune(models.Model):
     name = models.CharField(max_length=150)
