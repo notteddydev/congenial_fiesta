@@ -48,6 +48,7 @@ def create_tune_folders_for_one_to_many_queryset(self: admin.ModelAdmin, request
 class AlbumAdmin(admin.ModelAdmin):
     actions = [create_tune_folders_for_one_to_many_queryset]
     list_display = ("name", "artist",)
+    list_filter = ("artist",)
 
 class ArtistAdmin(admin.ModelAdmin):
     actions = [create_tune_folders_for_many_to_many_queryset]
