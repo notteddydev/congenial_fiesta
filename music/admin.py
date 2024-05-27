@@ -11,8 +11,52 @@ from django.http import HttpRequest
 
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
-from .models import Album, Artist, Genre, Tag, Tune
+from shutil import copy2
 
+from .models import Album, Artist, Genre, Tag, Tune, TuneOrganiser
+
+def create_tune_folders_for_many_to_many_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[TuneOrganiser]):
+    for item in queryset:
+        if not os.path.isdir(item.dir_path):
+            os.mkdir(item.dir_path)
+
+        filter = {self.model._meta.verbose_name_plural: item.id}
+
+        tunes = Tune.objects.filter(**filter)
+
+        for tune in tunes:
+            tune_file_path = f"{item.dir_path}/{tune.file_name}"
+            copy2(tune.full_file_path, tune_file_path)
+
+def create_tune_folders_for_one_to_many_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[TuneOrganiser]):
+    ids = queryset.values_list('id', flat=True)
+    tunes = dict()
+    filter = {f"{self.model._meta.verbose_name}_id__in": ids}
+    for tune in Tune.objects.filter(**filter):
+        tunes.setdefault(getattr(tune, f"{self.model._meta.verbose_name}_id"), []).append(tune)
+
+    for item in queryset:
+        if not os.path.isdir(item.dir_path):
+            os.mkdir(item.dir_path)
+
+        related_tunes = tunes[item.id]
+        
+        for related_tune in related_tunes:
+            related_tune_file_path = f"{item.dir_path}/{related_tune.file_name}"
+            copy2(related_tune.full_file_path, related_tune_file_path)
+
+class AlbumAdmin(admin.ModelAdmin):
+    actions = [create_tune_folders_for_one_to_many_queryset]
+    list_display = ("name", "artist",)
+
+class ArtistAdmin(admin.ModelAdmin):
+    actions = [create_tune_folders_for_many_to_many_queryset]
+
+class GenreAdmin(admin.ModelAdmin):
+    actions = [create_tune_folders_for_one_to_many_queryset]
+
+class TagAdmin(admin.ModelAdmin):
+    actions = [create_tune_folders_for_many_to_many_queryset]
 
 class TuneAdmin(admin.ModelAdmin):
     @admin.action(description="Set metadata for selected tunes")
@@ -75,8 +119,8 @@ class TuneAdmin(admin.ModelAdmin):
     list_filter = ("tags", "album__year", "artists", "album", "genre",)
 
 
-admin.site.register(Album)
-admin.site.register(Artist)
-admin.site.register(Genre)
-admin.site.register(Tag)
+admin.site.register(Album, AlbumAdmin)
+admin.site.register(Artist, ArtistAdmin)
+admin.site.register(Genre, GenreAdmin)
+admin.site.register(Tag, TagAdmin)
 admin.site.register(Tune, TuneAdmin)
