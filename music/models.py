@@ -52,6 +52,9 @@ class Album(TuneOrganiser):
     year = models.SmallIntegerField()
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True)
 
+    class Meta:
+        unique_together = ('name', 'year', 'artist',)
+
 class Tune(models.Model):
     name = models.CharField(max_length=150)
     file_name = models.CharField(blank=False, editable=False, max_length=200, unique=True)
