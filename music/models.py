@@ -75,6 +75,12 @@ class Album(TuneOrganiser):
     class Meta:
         unique_together = ('name', 'year', 'artist',)
 
+class RawTuneString(models.Model):
+    info = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.info
+
 class Tune(models.Model):
     name = models.CharField(max_length=150)
     file_name = models.CharField(blank=False, editable=False, max_length=200, unique=True)
