@@ -47,7 +47,22 @@ def create_tune_folders_for_one_to_many_queryset(self: admin.ModelAdmin, request
 
 class AlbumAdmin(admin.ModelAdmin):
     actions = [create_tune_folders_for_one_to_many_queryset]
-    list_display = ("name", "artist",)
+
+    def tracks(self: admin.ModelAdmin, obj: Album):
+        if obj.is_single:
+            return "Single"
+        
+        if obj.is_complete:
+            return "Full Album"
+        
+        count = Tune.objects.filter(album__id=obj.id).count()
+
+        if count > obj.track_count:
+            return "ATTENTION"
+        
+        return f"{count}/{obj.track_count}"
+
+    list_display = ("name", "artist", "tracks",)
     list_filter = ("artist",)
 
 class ArtistAdmin(admin.ModelAdmin):
