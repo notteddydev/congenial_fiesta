@@ -13,7 +13,7 @@ from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
 from shutil import copy2
 
-from .models import Album, Artist, Genre, Tag, Tune, TuneOrganiser
+from .models import Album, Artist, Genre, RawTuneString, Tag, Tune, TuneOrganiser
 
 def create_tune_folders_for_many_to_many_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[TuneOrganiser]):
     for item in queryset:
@@ -140,3 +140,5 @@ admin.site.register(Artist, ArtistAdmin)
 admin.site.register(Genre, GenreAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Tune, TuneAdmin)
+
+admin.site.register(RawTuneString)
