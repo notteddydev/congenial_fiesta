@@ -51,6 +51,26 @@ class Album(TuneOrganiser):
     name = models.CharField(max_length=100)
     year = models.SmallIntegerField()
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True)
+    track_count = models.SmallIntegerField(default=1)
+
+    @property
+    def is_complete(self):
+        return self.track_count == Tune.objects.filter(album__id=self.id).count()
+
+    @property
+    def is_single(self):
+        return self.track_count == 1
+    
+    def __str__(self):
+        s = self.name
+
+        if self.is_single:
+            return f"{s} (Single)"
+        
+        if self.is_complete:
+            return f"{s} (Full Album)"
+        
+        return s
 
     class Meta:
         unique_together = ('name', 'year', 'artist',)
