@@ -79,6 +79,7 @@ class Album(TuneOrganiser):
         super().save(*args, **kwargs)
 
     class Meta:
+        ordering = ["name"]
         unique_together = ('name', 'year', 'artist',)
 
 class RawTuneString(models.Model):
