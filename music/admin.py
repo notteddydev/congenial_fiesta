@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import urllib.parse
 
 from datetime import datetime, timedelta
 
@@ -8,6 +9,8 @@ from django.contrib import admin
 from django.db import transaction
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
+from django.urls import reverse
+from django.utils.html import format_html
 
 from django_celery_beat.models import ClockedSchedule, PeriodicTask
 
@@ -70,6 +73,13 @@ class ArtistAdmin(admin.ModelAdmin):
 
 class GenreAdmin(admin.ModelAdmin):
     actions = [create_tune_folders_for_one_to_many_queryset]
+
+class RawTuneStringAdmin(admin.ModelAdmin):    
+    def go(self, obj):
+        url = reverse("rawtunestring-info", args=[obj.id])
+        return format_html(f"<a href='{url}'>{obj}</a>")
+
+    list_display = ("go",)
 
 class TagAdmin(admin.ModelAdmin):
     actions = [create_tune_folders_for_many_to_many_queryset]
@@ -141,4 +151,4 @@ admin.site.register(Genre, GenreAdmin)
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Tune, TuneAdmin)
 
-admin.site.register(RawTuneString)
+admin.site.register(RawTuneString, RawTuneStringAdmin)
