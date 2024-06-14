@@ -1,5 +1,5 @@
-import os
 import eyed3
+import os
 
 from django.db import models
 from django.db.models.signals import post_save
@@ -62,15 +62,21 @@ class Album(TuneOrganiser):
         return self.track_count == 1
     
     def __str__(self):
-        s = self.name
+        if self.is_complete and not self.is_single:
+            return f"{self.name} (Full Album)"
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.replace(" (Single)", "")
+        self.name = self.name.replace(" (Remix)", "")
 
         if self.is_single:
-            return f"{s} (Single)"
-        
-        if self.is_complete:
-            return f"{s} (Full Album)"
-        
-        return s
+            is_remix = Tune.objects.filter(album__id=self.id, is_remix=True).exists()
+            if is_remix:
+                self.name = f"{self.name} (Remix)"
+            self.name = f"{self.name} (Single)"
+
+        super().save(*args, **kwargs)
 
     class Meta:
         unique_together = ('name', 'year', 'artist',)
@@ -123,6 +129,10 @@ class Tune(models.Model):
     def save(self, *args, **kwargs):
         if self.file_name == "":
             self.file_name = f"{self.youtube_id}.mp3"
+
+        self.name = self.name.replace(" (Remix)", "")
+        if self.is_remix:
+            self.name = f"{self.name} (Remix)"            
 
         super().save(*args, **kwargs)
 
