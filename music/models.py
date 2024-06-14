@@ -52,7 +52,6 @@ class Album(TuneOrganiser):
     year = models.SmallIntegerField()
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, null=True)
     track_count = models.SmallIntegerField(default=1)
-    reference = models.CharField(max_length=150)
 
     @property
     def is_complete(self):
