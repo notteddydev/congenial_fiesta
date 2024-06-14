@@ -92,6 +92,7 @@ class Tune(models.Model):
     youtube_id = models.CharField(blank=False, max_length=75, unique=True)
     trim_start_seconds = models.IntegerField(blank=False, default=0, null=False)
     trim_end_seconds = models.IntegerField(blank=False, default=0, null=False)
+    is_remix = models.BooleanField(default=False)
     attempt_download_on_create = models.BooleanField(default=False)
 
     tracker = FieldTracker()
