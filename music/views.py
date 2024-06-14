@@ -37,7 +37,7 @@ class RawTuneStringInfoView(View):
         video_ids = re.findall(r"watch\?v=(\S{11})", html.read().decode())
 
         distinct_video_ids = list(dict.fromkeys(video_ids))
-        first_video_ids = distinct_video_ids[:5]
+        first_video_ids = distinct_video_ids[:4]
 
         genius_query = urllib.parse.quote(f"site:genius.com {rts.info}")
         google_query = urllib.parse.quote(rts.info)
