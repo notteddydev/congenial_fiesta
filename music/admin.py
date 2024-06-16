@@ -127,7 +127,7 @@ class TuneAdmin(admin.ModelAdmin):
 
     def delete_queryset(self: admin.ModelAdmin, request: HttpRequest, queryset: QuerySet[Tune]) -> None:
         for tune in queryset:
-            tune.remove_file()
+            tune.remove_files()
 
         return super().delete_queryset(request, queryset)
 

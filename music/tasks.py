@@ -38,9 +38,7 @@ def tune_update_file_name(tune_id):
         return
      
     tune.set_file_name().save()
-    current_path = f"{os.environ.get('TUNES_DIR')}/{existing_file_name}"
-
-    move(current_path, tune.full_file_path)
+    tune.move_files()
 
 
 @shared_task
@@ -68,6 +66,5 @@ def tune_update_file_names_for_artist(artist_id):
         if existing_file_name is None:
             print(f"No file found for tune with id: {tune.id}")
             continue
-
-        current_path = f"{os.environ.get('TUNES_DIR')}/{existing_file_name}"
-        move(current_path, tune.full_file_path)
+        
+        tune.move_files()
