@@ -3,28 +3,12 @@ import subprocess
 import urllib.parse
 import urllib.request
 
-from django.http import HttpResponseNotFound, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.views.generic import ListView, View
+from django.views.generic import View
 
 from .models import RawTuneString, Tune
-
-
-class TuneListView(ListView):
-    model = Tune
-
-
-class TuneListenView(View):
-    def post(self, request, id):
-        tune = Tune.objects.get(pk=id)
-        tune.set_file_name()
-        
-        if tune.download():
-            tune.save()
-            return HttpResponseRedirect(reverse("tune-list"))
-        
-        return HttpResponseNotFound("YouTube video not found.")
     
 class RawTuneStringInfoView(View):
     def get(self, request, id):
