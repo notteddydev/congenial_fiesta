@@ -11,9 +11,11 @@ from pydub import AudioSegment
 from pytube import YouTube
 from pytube.exceptions import VideoUnavailable
 from model_utils import FieldTracker
-from shutil import copy2
+from shutil import copy2, move
 
 from .tasks import tune_download, tune_update_file_name, tune_update_file_names_for_artist
+from .utils import get_existing_tune_file_name_by_tune_id
+
 
 class TuneOrganiser(models.Model):
     @property
@@ -138,7 +140,7 @@ class Tune(models.Model):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        self.remove_file()
+        self.remove_files()
         super().delete(*args, **kwargs)
 
     def set_file_name(self):
@@ -152,9 +154,19 @@ class Tune(models.Model):
 
         return self
     
-    def remove_file(self):
+    def move_files(self):
+        existing_file_name = get_existing_tune_file_name_by_tune_id(self.id)
+
+        current_path = f"{os.environ.get('TUNES_DIR')}/{existing_file_name}"
+        current_original_path = f"{os.environ.get('ORIGINAL_TUNES_DIR')}/{existing_file_name}"
+
+        move(current_path, self.full_file_path)
+        move(current_original_path, self.full_file_path_original)
+    
+    def remove_files(self):
         if self.downloaded:
             os.remove(self.full_file_path)
+            os.remove(self.full_file_path_original)
 
     def trim(self):
         if not self.trimmable:
