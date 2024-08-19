@@ -25,3 +25,8 @@ Handy links
 https://eyed3.readthedocs.io/en/latest/plugins/genres_plugin.html
 https://stackoverflow.com/questions/31816624/naming-convention-for-django-url-templates-models-and-views
 https://python.plainenglish.io/setting-up-a-basic-django-project-with-pipenv-7c58fa2ec631
+
+
+### todo
+
+- Create method to sync tunes - removal / filenames through all folders.
